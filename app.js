@@ -1,9 +1,13 @@
-// State awal dengan contoh data dummy
 let tasks = [
   { id: '1', judul: 'Lab 10 event delegation', matkul: 'Pemrograman Web', deadline: '2026-10-08', selesai: false },
   { id: '2', judul: 'ERD sistem perpustakaan', matkul: 'Basis Data', deadline: '2026-10-12', selesai: true }
 ];
 
+const taskForm = document.getElementById('task-form');
+const inputTitle = document.getElementById('task-title');
+const selectCourse = document.getElementById('task-course');
+const inputDeadline = document.getElementById('task-deadline');
+const errorMessage = document.getElementById('error-message');
 const taskList = document.getElementById('task-list');
 const emptyState = document.getElementById('empty-state');
 
@@ -34,11 +38,11 @@ function render() {
 
     const titleSpan = document.createElement('span');
     titleSpan.className = 'task-title';
-    titleSpan.textContent = task.judul; // Aman dari XSS
+    titleSpan.textContent = task.judul;
 
     const metaSpan = document.createElement('span');
     metaSpan.className = 'task-meta';
-    metaSpan.textContent = `${task.matkul} · deadline ${task.deadline}`; // Aman dari XSS
+    metaSpan.textContent = `${task.matkul} · deadline ${task.deadline}`;
 
     infoDiv.appendChild(titleSpan);
     infoDiv.appendChild(metaSpan);
@@ -55,5 +59,64 @@ function render() {
     taskList.appendChild(li);
   });
 }
+
+taskForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const judul = inputTitle.value.trim();
+  const matkul = selectCourse.value;
+  const deadline = inputDeadline.value;
+
+  if (judul.length < 3) {
+    errorMessage.textContent = 'Judul tugas minimal harus 3 karakter.';
+    errorMessage.style.display = 'block';
+    return;
+  }
+  if (!deadline) {
+    errorMessage.textContent = 'Deadline wajib diisi.';
+    errorMessage.style.display = 'block';
+    return;
+  }
+
+  errorMessage.textContent = '';
+  errorMessage.style.display = 'none';
+
+  tasks.push({
+    id: Date.now().toString(),
+    judul: judul,
+    matkul: matkul,
+    deadline: deadline,
+    selesai: false
+  });
+
+  render();
+
+  inputTitle.value = '';
+  inputDeadline.value = '';
+});
+
+// 03. Event Delegation di <ul>
+taskList.addEventListener('click', function (e) {
+  const item = e.target.closest('.task-item');
+  if (!item) return;
+
+  const taskId = item.dataset.id;
+
+  // Tombol Hapus
+  if (e.target.classList.contains('btn-delete')) {
+    tasks = tasks.filter(t => t.id !== taskId);
+    render();
+    return;
+  }
+
+  // Checkbox Selesai
+  if (e.target.classList.contains('task-checkbox')) {
+    const targetTask = tasks.find(t => t.id === taskId);
+    if (targetTask) {
+      targetTask.selesai = e.target.checked;
+      render();
+    }
+  }
+});
 
 render();
